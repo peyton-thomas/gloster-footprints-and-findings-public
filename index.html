@@ -1,0 +1,995 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gloster Footprints and Findings</title>
+
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f0;
+      color: #24342b;
+    }
+
+    header {
+      padding: 24px;
+      background: #254536;
+      color: white;
+    }
+
+    header h1 { margin: 0 0 8px; }
+
+    header p { margin: 0; }
+
+    #map {
+      height: 65vh;
+      min-height: 400px;
+    }
+
+    .description {
+      padding: 24px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .measurement-references {
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.6;
+}
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Gloster Footprints and Findings</h1>
+    <p>Community-based Air Quality Monitoring | Gloster, Mississippi</p>
+  </header>
+
+  <div id="map"></div>
+
+  <section class="description">
+    <h2>Exploring Air Quality Across Gloster</h2>
+    <p>
+      This project brings together community-based environmental
+      monitoring and interactive visualizations to explore
+      air-quality conditions across Gloster.
+    </p>
+    <p>
+      Monitoring results will be displayed by broad geographic
+      areas to protect participant privacy. Exact monitoring
+      locations and individual movement routes will not be published at this time.
+    </p>
+  </section>
+
+<section class="description" id="coverage">
+  <h2>Monitoring Coverage</h2>
+
+  <p>
+    Community participants are collecting air-quality
+    measurements at selected locations across Gloster.
+    The figures below describe the monitoring dataset,
+    not air quality throughout the entire town.
+  </p>
+
+  <div style="
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  ">
+
+    <div style="background:white; padding:20px; border-radius:10px;">
+      <div style="font-size:2rem; font-weight:bold;">5</div>
+      <div>Monitoring participants</div>
+    </div>
+
+    <div style="background:white; padding:20px; border-radius:10px;">
+      <div style="font-size:2rem; font-weight:bold;">41</div>
+      <div>Monitoring dates</div>
+    </div>
+
+    <div style="background:white; padding:20px; border-radius:10px;">
+      <div style="font-size:2rem; font-weight:bold;">39,995</div>
+      <div>Recorded observations</div>
+    </div>
+
+    <div style="background:white; padding:20px; border-radius:10px;">
+      <div style="font-size:2rem; font-weight:bold;">11</div>
+      <div>Measurements displayed</div>
+    </div>
+
+  </div>
+
+  <p style="font-size:0.9rem; color:#555;">
+    Monitoring dates span August 26–October 7, 2026.
+    Data collection varies across participants, dates,
+    locations, and measurements. Most observations come
+    from a small number of monitored locations.
+    Observation totals do not represent independent
+    sampling events or uniform geographic coverage.
+  </p>
+</section>
+
+<section class="description" id="monitoringCalendar">
+  <h2>Monitoring Calendar</h2>
+
+  <p>
+    This calendar shows when community monitoring occurred.
+    Dates with limited participation are displayed without
+    individual measurements or participant information.
+  </p>
+
+  <div style="display:flex; gap:18px; flex-wrap:wrap; margin:16px 0;">
+    <span>🟩 3+ participants</span>
+    <span>🟨 1–2 participants</span>
+    <span>⬜ No monitoring</span>
+  </div>
+
+  <div id="calendarGrid" style="
+    display:grid;
+    grid-template-columns:repeat(7, minmax(0, 1fr));
+    gap:6px;
+    background:white;
+    padding:16px;
+    border-radius:10px;
+  "></div>
+
+  <p style="font-size:0.85rem; color:#555;">
+    Monitoring coverage does not indicate air quality.
+    Daily measurement availability varies by variable.
+  </p>
+</section>
+
+<section class="description" id="dashboard">
+  <h2>Explore Air-Quality Measurements</h2>
+
+  <p>
+    Select a variable to explore how air quality and
+    environmental conditions change over time.
+  </p>
+<label for="regionSelect">
+  <strong>Geographic area:</strong>
+</label>
+
+<select id="regionSelect">
+  <option value="all">All monitored locations</option>
+  <option value="north" disabled>North Gloster — data pending</option>
+  <option value="south" disabled>South Gloster — data pending</option>
+  <option value="east" disabled>East Gloster — data pending</option>
+  <option value="west" disabled>West Gloster — data pending</option>
+  <option value="central" disabled>Central Gloster — data pending</option>
+</select>
+<label for="timeScale">
+  <strong>Time scale:</strong>
+</label>
+
+<select id="timeScale">
+  <option value="weekly">Weekly</option>
+  <option value="daily">Daily</option>
+  <option value="monthly">Monthly</option>
+</select>
+
+  <label for="variableSelect">
+    <strong>Measurement:</strong>
+  </label>
+
+  <select id="variableSelect">
+    <option value="tvoc">TVOC (ppm)</option>
+    <option value="tvoc_index">TVOC Index</option>
+    <option value="pm1">PM1.0 (µg/m³)</option>
+    <option value="pm25">PM2.5 (µg/m³)</option>
+    <option value="pm10">PM10 (µg/m³)</option>
+    <option value="co2">CO₂ (ppm)</option>
+    <option value="aqs">Air Quality Score (AQS)</option>
+    <option value="temperature">Temperature (°C)</option>
+    <option value="humidity">Relative Humidity (%)</option>
+    <option value="pressure">Atmospheric Pressure (hPa)</option>
+  </select>
+
+  <div id="chartContainer"
+       style="margin-top:24px; padding:20px;
+              background:white; border-radius:10px;">
+    <canvas id="airQualityChart"></canvas>
+    <p id="chartStatus">
+    <p id="dataAvailability"
+    style="font-size:0.9rem; color:#555;">
+    
+<div id="measurement-guide" style="
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid #d9e4df;
+  border-radius: 12px;
+  background: #f8fbf9;
+">
+  <h3>Understanding the measurements</h3>
+
+  <p>
+    These categories provide context for sensor readings.
+    They are not regulatory air quality standards or
+    direct measures of individual health risk.
+  </p>
+
+  <div id="measurement-guide-content"></div>
+</div>
+</p> 
+      Monitoring summaries will appear here.
+    </p>
+  </div>
+
+  <p style="font-size:0.9rem; color:#555;">
+    Measurements are collected at sampled locations and
+    do not represent air quality throughout Gloster.
+    Some variables are sampled less frequently than others.
+  </p>
+</section>
+
+
+<section class="description" id="measurementGuide">
+  <h2>Understanding the Measurements</h2>
+
+  <p>
+    Community monitoring sensors record several indicators
+    of air quality and environmental conditions. These
+    measurements help identify patterns, but they do not
+    identify specific pollution sources on their own.
+  </p>
+
+  <details>
+    <summary><strong>TVOC and TVOC Index</strong></summary>
+    <p>
+      Total volatile organic compounds (TVOC) provide a broad
+      indicator of gases detected by the sensor. VOCs can contribute to ground-level ozone production, respiratory issues, and can accumulate in water and soils, disrupting terrestrial and aquatic life. The TVOC
+      Index describes relative changes in gas conditions.
+      Neither measurement identifies individual chemicals.
+      TVOC readings should not be treated as a regulatory
+      health threshold.
+    </p>
+    <p class="measurement-references">
+    
+    References:
+    <a href="https://pubmed.ncbi.nlm.nih.gov/41600596/" target="_blank" rel="noopener noreferrer">
+    Jiang et al.(2025). Environmental and Health Risk Assessments of Volatile Organic Compounds (VOCs) Based on Source Apportionment-A Case Study in Harbin, a Megacity in Northeastern China. Toxics. 2025 Dec 31;14(1):46.
+  </a>
+  </details>
+
+  <details>
+    <summary><strong>PM1, PM2.5, and PM10</strong></summary>
+    <p>
+      Particulate matter (PM) refers to tiny particles
+      suspended in the air. PM1, PM2.5, and PM10 describe
+      particles within different size ranges, measured
+      in micrograms per cubic meter (µg/m³).
+      These measurements were collected less frequently
+      than some other variables. 
+    </p>
+    <p class="measurement-references">
+    References:
+  <a href="https://www.epa.gov/pm-pollution/particulate-matter-pm-basics" target="_blank" rel="noopener noreferrer">
+    US Environmental Protection Agency. (2025)
+  </a>,
+   <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6415634/" target="_blank" rel="noopener noreferrer">
+    Crinnnion W.(2017). Particulate Matter Is a Surprisingly Common Contributor to Disease. Integr Med (Encinitas). 16(4):8-12.
+  </a>
+</p>
+  </details>
+
+  <details>
+    <summary><strong>CO₂</strong></summary>
+    <p>
+      Carbon dioxide (CO₂) is measured in parts per million
+      (ppm). Changes can reflect ventilation, nearby people,
+      and environmental conditions. CO₂ is not a direct
+      measure of outdoor industrial pollution.
+
+    </p>
+     <p class="measurement-references">
+    References:
+  <a href="https://www.epa.gov/ghgemissions/carbon-dioxide-emissions" target="_blank" rel="noopener noreferrer">
+    US Environmental Protection Agency. (2026)
+  </a>,
+   <a href="https://doi.org/10.1039/d5va00017c." target="_blank" rel="noopener noreferrer">
+    Bardi et al. (2025). Carbon dioxide as a pollutant: the risks on human health and the stability of the biosphere,
+Environmental Science Advances.4(9). 1364-1372.
+  </a>
+</p>
+  </details>
+
+  <details>
+    <summary><strong>Air Quality Score (AQS) and NOx Index</strong></summary>
+    <p>
+      These are sensor-generated indicators rather than
+      direct measurements of individual pollutants.
+      AQS is not the same as the official U.S. Air Quality
+      Index (AQI). The NOx Index does not directly report
+      nitrogen oxide concentrations in ppm or ppb.
+    </p>
+    <p class="measurement-references">
+  
+        References:
+  <a href="https://support.atmotube.com/en/articles/10364364-understanding-atmotube-s-air-quality-score-aqs" target="_blank" rel="noopener noreferrer">
+    Atmotube (2025)
+  </a>
+  </details>
+
+  <details>
+    <summary><strong>Temperature, Humidity, and Pressure</strong></summary>
+    <p>
+      These variables describe local environmental
+      conditions. They can influence sensor readings
+      and help provide context for changes in air quality.
+    </p>
+  </details>
+
+  <p style="font-size:0.9rem; color:#555;">
+    These are community monitoring measurements, not
+    regulatory-grade assessments. Missing observations
+    should not be interpreted as clean air or zero pollution.
+  </p>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@4.4.5/build/index.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>  
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const map = L.map("map").setView([31.20, -91.02], 13);
+
+    L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/" +
+      "World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        attribution: "Imagery: Esri and contributors",
+        maxZoom: 18
+      }
+    ).addTo(map);
+
+    
+    // Weekly air-quality dashboard
+    const variableSelect = document.getElementById("variableSelect");
+    const chartStatus = document.getElementById("chartStatus");
+
+    const variableLabels = {
+      tvoc: "TVOC (ppm)",
+      tvoc_index: "TVOC Index",
+      pm1: "PM1.0 (µg/m³)",
+      pm25: "PM2.5 (µg/m³)",
+      pm10: "PM10 (µg/m³)",
+      co2: "CO₂ (ppm)",
+      aqs: "Air Quality Score",
+      nox_index: "NOx Index",
+      temperature: "Temperature (°C)",
+      humidity: "Relative Humidity (%)",
+      pressure: "Atmospheric Pressure (hPa)"
+    };
+
+    
+    // Daily and weekly air-quality dashboard
+    const timeScale = document.getElementById("timeScale");
+
+    let weeklyData = [];
+    let dailyData = [];
+    let monthlyData = [];
+    let monthlyBoxplotData = [];
+    let airQualityChart = null;
+    let selectedCalendarDate = null;   
+
+const sensorCategories = {
+  tvoc: {
+    title: "TVOC (ppm)",
+    description:
+      "Atmotube sensor-reference categories. TVOC is a screening measurement; it does not identify individual chemicals or establish health risk.",
+    rows: [
+      ["Good", "< 0.088", "#1a9850"],
+      ["Moderate", "0.088–0.261", "#fee08b"],
+      ["Polluted", "0.262–0.660", "#fc8d59"],
+      ["Very Polluted", "0.661–2.200", "#d73027"],
+      ["Severely Polluted", "≥ 2.201", "#8b0000"]
+    ]
+  },
+
+  aqs: {
+    title: "Atmotube Air Quality Score (AQS)",
+    description:
+      "Higher AQS values indicate better sensor-reported air quality. This is not the U.S. EPA Air Quality Index.",
+    rows: [
+      ["Good", "81–100", "#1a9850"],
+      ["Moderate", "61–80", "#fee08b"],
+      ["Polluted", "41–60", "#fc8d59"],
+      ["Very Polluted", "21–40", "#d73027"],
+      ["Severely Polluted", "0–20", "#8b0000"]
+    ]
+  },
+  
+pm25: {
+  title: "PM2.5 (µg/m³)",
+  description:
+    "Atmotube sensor-reference categories for individual readings. These are not EPA regulatory thresholds. The dashed line on the graph is a separate EPA 24-hour AQI reference and does not classify individual readings or monthly distributions.",
+  rows: [
+    ["Good", "0–20", "#1a9850"],
+    ["Moderate", "21–50", "#fee08b"],
+    ["Polluted", "51–90", "#fc8d59"],
+    ["Very Polluted", "91–140", "#d73027"],
+    ["Severely Polluted", "≥ 141", "#8b0000"]
+  ]
+},
+
+pm10: {
+  title: "PM10 (µg/m³)",
+  description:
+    "Atmotube sensor-reference categories for individual readings. These are not EPA regulatory thresholds. The dashed line on the graph is a separate EPA 24-hour AQI reference.",
+  rows: [
+    ["Good", "0–30", "#1a9850"],
+    ["Moderate", "31–75", "#fee08b"],
+    ["Polluted", "76–125", "#fc8d59"],
+    ["Very Polluted", "126–200", "#d73027"],
+    ["Severely Polluted", "≥ 201", "#8b0000"]
+  ]
+},
+
+pm1: {
+  title: "PM1 (µg/m³)",
+  description:
+    "Particles with diameters of approximately 1 micrometer or smaller. PM1 may be associated with combustion and other sources, but there is no separate EPA ambient air quality standard for PM1.",
+  rows: []
+},
+
+tvoc_index: {
+  title: "TVOC Index",
+  description:
+    "A sensor-relative indicator of changes in volatile organic compounds. Higher values generally indicate a stronger VOC signal relative to the sensor baseline. It is not a direct measurement of individual chemicals or a standardized health-risk scale.",
+  rows: []
+},
+
+nox_index: {
+  title: "NOx Index",
+  description:
+    "A sensor-derived indicator related to nitrogen oxide gases. NOx is associated with respiratory diseases (ex: asthma, emphysema, bronchitis), mental and behavioral health disorders, and circulatory system diseases. Elevatd NOx may contribute to acid rain, harmful algal blooms, and reduced plant growth. This index is not equivalent to a measured NO2 concentration and should not be compared with EPA NO2 standards.",
+  rows: []
+},
+
+co2: {
+  title: "Carbon dioxide (CO₂, ppm)",
+  description:
+    "CO₂ can help characterize ventilation and occupancy, especially indoors. The dashed 1,000 ppm line is an indoor ventilation screening reference, not an outdoor pollution or health standard. CO₂ alone cannot establish whether a measurement was collected indoors or outdoors.",
+  rows: []
+},
+
+temperature: {
+  title: "Temperature (°C)",
+  description:
+    "Measured air temperature provides environmental context. Heat-related health risk also depends on humidity, exposure duration, activity, and other factors.",
+  rows: []
+},
+
+humidity: {
+  title: "Relative humidity (%)",
+  description:
+    "The amount of moisture in the air relative to saturation at the measured temperature. Humidity influences thermal comfort and can affect some low-cost air sensor measurements.",
+  rows: []
+},
+
+pressure: {
+  title: "Atmospheric pressure (hPa)",
+  description:
+    "Measured atmospheric pressure provides meteorological context. It is not a direct measure of air pollution.",
+  rows: []
+}
+};
+
+function updateMeasurementGuide(variable) {
+  const container =
+    document.getElementById("measurement-guide-content");
+
+  const guide = sensorCategories[variable];
+
+  if (!guide) {
+    container.innerHTML =
+      "<p>Additional measurement context will be added here.</p>";
+    return;
+  }
+
+  container.innerHTML = `
+    <h4>${guide.title}</h4>
+    <p>${guide.description}</p>
+
+    <div style="display:grid;gap:8px;">
+      ${guide.rows.map(([name, range, color]) => `
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:12px;
+        ">
+          <span style="
+            display:inline-block;
+            width:14px;
+            height:14px;
+            background:${color};
+            border-radius:3px;
+          "></span>
+
+          <span style="flex:1;">${name}</span>
+          <strong>${range}</strong>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+    
+function updateChart() {
+  const variable = variableSelect.value;
+  updateMeasurementGuide(variable);
+  const scale = timeScale.value;
+    
+    
+const referenceThresholds = {
+  pm25: {
+    value: 9,
+    label: "EPA Good AQI upper bound (24-hour)"
+  },
+  pm10: {
+    value: 54,
+    label: "EPA Good AQI upper bound (24-hour)"
+  },
+  co2: {
+    value: 1000,
+    label: "Indoor ventilation screening reference"
+  }
+};
+
+const reference = referenceThresholds[variable];
+
+  const dataByScale = {
+    daily: dailyData,
+    weekly: weeklyData,
+    monthly: monthlyData
+  };
+
+  const dateFields = {
+    daily: "date",
+    weekly: "week",
+    monthly: "month"
+  };
+
+  const scaleLabels = {
+    daily: "Daily",
+    weekly: "Weekly",
+    monthly: "Monthly"
+  };
+
+  const selectedData = dataByScale[scale] || [];
+  const dateField = dateFields[scale];
+
+  if (airQualityChart) {
+    airQualityChart.destroy();
+  }
+
+  
+const chartData = scale === "monthly"
+  
+? monthlyBoxplotData
+    .filter(row => row.variable === variable)
+    .map(row => ({
+      min: row.whisker_min,
+      q1: row.q1,
+      median: row.median,
+      q3: row.q3,
+      max: row.whisker_max,
+      mean: row.mean
+    }))
+
+  : selectedData.map(row => ({
+      x: Date.parse(row[dateField] + "T12:00:00Z"),
+      y: row[variable]
+    }));
+
+
+  airQualityChart = new Chart(
+    document.getElementById("airQualityChart"),
+    {
+      type: scale === "monthly"
+  ? "boxplot"
+  : scale === "daily"
+    ? "scatter"
+    : "line",
+      
+data: {
+  datasets: scale === "monthly"
+    ? [{
+        
+label: variableLabels[variable],
+data: chartData,
+backgroundColor: "rgba(38,122,97,0.25)",
+borderColor: "#267a61",
+borderWidth: 2,
+meanRadius: 5,
+meanBackgroundColor: "#d97706",
+meanBorderColor: "#ffffff",
+meanBorderWidth: 1.5
+      }]
+    : [{
+        label: variableLabels[variable],
+        data: chartData,
+        borderColor: "#267a61",
+        backgroundColor: "rgba(38,122,97,0.15)",
+        borderWidth: 2,
+        pointRadius: selectedData.map(row =>
+          scale === "daily" &&
+          row.date === selectedCalendarDate ? 9 : 5
+        ),
+        pointBackgroundColor: selectedData.map(row =>
+          scale === "daily" &&
+          row.date === selectedCalendarDate
+            ? "#d97706"
+            : "#267a61"
+        ),
+        tension: 0.2,
+        spanGaps: false
+      }]
+},
+
+      options: {
+        parsing: scale === "monthly",
+        responsive: true,
+        
+plugins: {
+  legend: {
+    display: true
+  },
+
+  annotation: {
+    annotations: reference
+      ? {
+          referenceLine: {
+            type: "line",
+            yMin: reference.value,
+            yMax: reference.value,
+            borderColor: "#d97706",
+            borderWidth: 2,
+            borderDash: [7, 5],
+            label: {
+              display: true,
+              content: reference.label,
+              position: "end",
+              backgroundColor: "rgba(255,255,255,0.9)",
+              color: "#92400e"
+            }
+          }
+        }
+      : {}
+  }
+},
+        scales: {
+          y: {
+            title: {
+              display: true,
+              text: variableLabels[variable]
+            }
+          },
+          x: {
+  type: scale === "monthly" ? "category" : "linear",
+  labels: scale === "monthly"
+    ? selectedData.map(row => row.month)
+    : undefined,
+            title: {
+              display: true,
+              text: {
+                daily: "Monitoring date",
+                weekly: "Week beginning",
+                monthly: "Month"
+              }[scale]
+            },
+            ticks: {
+              maxTicksLimit: 8,
+              
+callback: function(value) {
+  if (scale === "monthly") {
+    const month = selectedData[value]?.month;
+
+    if (!month) return "";
+
+    return new Date(month + "-01T12:00:00Z")
+      .toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+        timeZone: "UTC"
+      });
+  }
+
+  return new Date(value).toLocaleDateString(
+    "en-US",
+    {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC"
+    }
+  );
+}
+
+            }
+          }
+        }
+      }
+    }
+  );
+
+  const available = selectedData.filter(row =>
+    row[variable] !== null &&
+    row[variable] !== undefined
+  ).length;
+
+  const total = selectedData.length;
+
+  document.getElementById("dataAvailability").textContent =
+    `Data availability: ${available} of ${total} ` +
+    `${scale} summaries have reportable ` +
+    `${variableLabels[variable]} values.`;
+
+  const method = scale === "monthly"
+    ? "Each value is the pooled average of recorded observations."
+    : "Each value is the median of participant-level medians.";
+
+  chartStatus.textContent =
+    `${scaleLabels[scale]} summaries: ` +
+    `${available} available values for ${variableLabels[variable]}. ` +
+    method +
+    (scale === "monthly"
+      ? " Longer recordings contribute more observations."
+      : " Values with fewer than three contributing participants are withheld.");
+}
+
+    
+Promise.all([
+  fetch("daily_summary.json").then(r => {
+    if (!r.ok) throw new Error("Daily data failed");
+    return r.json();
+  }),
+  fetch("weekly_summary.json").then(r => {
+    if (!r.ok) throw new Error("Weekly data failed");
+    return r.json();
+  }),
+  fetch("monthly_summary.json").then(r => {
+    if (!r.ok) throw new Error("Monthly data failed");
+    return r.json();
+  }),
+  fetch("monthly_boxplot.json").then(r => {
+  if (!r.ok) throw new Error("Monthly boxplot data failed");
+  return r.json();
+})
+])
+.then(([daily, weekly, monthly, boxplot]) => {
+  dailyData = daily;
+  weeklyData = weekly;
+  monthlyData = monthly;
+  monthlyBoxplotData = boxplot;
+
+  console.log("Daily:", dailyData[0]);
+  console.log("Weekly:", weeklyData[0]);
+  console.log("Monthly:", monthlyData[0]);
+
+  updateChart();
+})
+.catch(error => {
+  chartStatus.textContent =
+    "Unable to load monitoring summaries.";
+  console.error(error);
+});
+
+    variableSelect.addEventListener("change", updateChart);
+    timeScale.addEventListener("change", updateChart);
+
+
+    // Illustrative directional regions, not official boundaries.
+    // No participant coordinates or observations are included.
+
+    const center = [31.20, -91.02];
+
+    const regions = [
+      { name: "North Gloster", center: [31.215, -91.02] },
+      { name: "South Gloster", center: [31.185, -91.02] },
+      { name: "East Gloster", center: [31.20, -91.005] },
+      { name: "West Gloster", center: [31.20, -91.035] },
+      { name: "Central Gloster", center: center }
+    ];
+
+    
+    regions.forEach(region => {
+      L.circle(region.center, {
+        radius: 550,
+        color: "#f5d76e",
+        fillColor: "#f5d76e",
+        fillOpacity: 0.18,
+        weight: 2
+      })
+      .addTo(map)
+      .bindPopup(`
+        <strong>${region.name}</strong><br>
+        Geographic reporting area (illustrative).<br>
+        Area-level monitoring summaries are not yet available.
+      `)
+      .on("click", function () {
+        selectMapRegion(region.name);
+      });
+    });
+
+    // Connect map regions to the dashboard controls.
+    const regionSelect = document.getElementById("regionSelect");
+
+    function selectMapRegion(regionName) {
+      // Regional data are not yet approved for display.
+      // Keep the graph on the pooled monitoring summary.
+      regionSelect.value = "all";
+
+      document.getElementById("chartStatus").textContent =
+        regionName + " Gloster: region-specific summaries are " +
+        "not yet available. The graph currently shows pooled " +
+        "measurements from monitored locations.";
+    }
+    
+    
+    // Monitoring calendar: separate months with aligned weekdays
+    fetch("monitoring_calendar.json")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Unable to load monitoring calendar");
+        }
+        return response.json();
+      })
+      .then(records => {
+        const calendarGrid =
+          document.getElementById("calendarGrid");
+
+        calendarGrid.innerHTML = "";
+
+        const coverageByDate = Object.fromEntries(
+          records.map(row => [row.date, row.coverage])
+        );
+
+        const months = [
+          { year: 2026, month: 7 }, // August
+          { year: 2026, month: 8 }, // September
+          { year: 2026, month: 9 }  // October
+        ];
+
+        months.forEach(({ year, month }) => {
+          const monthHeader = document.createElement("h3");
+
+          monthHeader.textContent =
+            new Date(Date.UTC(year, month, 1))
+              .toLocaleDateString("en-US", {
+                month: "long",
+                year: "numeric",
+                timeZone: "UTC"
+              });
+
+          monthHeader.style.cssText = `
+            grid-column: 1 / -1;
+            margin: 20px 0 4px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+          `;
+
+          calendarGrid.appendChild(monthHeader);
+
+          // Weekday labels
+          ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+            .forEach(label => {
+              const heading = document.createElement("div");
+              heading.textContent = label;
+              heading.style.cssText = `
+                text-align: center;
+                font-weight: bold;
+                font-size: 0.8rem;
+                padding: 6px 0;
+              `;
+              calendarGrid.appendChild(heading);
+            });
+
+          const firstDay = new Date(Date.UTC(year, month, 1));
+          const daysInMonth =
+            new Date(Date.UTC(year, month + 1, 0))
+              .getUTCDate();
+
+          // Empty cells before the first day of the month
+          for (let i = 0; i < firstDay.getUTCDay(); i++) {
+            calendarGrid.appendChild(
+              document.createElement("div")
+            );
+          }
+
+          for (let day = 1; day <= daysInMonth; day++) {
+            const date =
+              `${year}-${String(month + 1).padStart(2, "0")}-` +
+              String(day).padStart(2, "0");
+
+            const coverage = coverageByDate[date] || "none";
+
+            const cell = document.createElement("div");
+            cell.textContent = day;
+
+            cell.title = `${date}: ${
+              coverage === "multi"
+                ? "3+ participants"
+                : coverage === "limited"
+                ? "Limited participation"
+                : "No monitoring"
+            }`;
+
+            cell.style.cssText = `
+              text-align: center;
+              padding: 12px 2px;
+              border-radius: 6px;
+              font-size: 0.9rem;
+              background: ${
+                coverage === "multi"
+                  ? "#a9d9b5"
+                  : coverage === "limited"
+                  ? "#f5dfa0"
+                  : "#eeeeee"
+              };
+            `;
+
+            // Select a calendar date and display its daily graph.
+            cell.style.cursor = "pointer";
+
+            cell.addEventListener("click", function () {
+              selectedCalendarDate = date;
+
+              // Switch to the daily graph.
+              timeScale.value = "daily";
+              updateChart();
+
+              // Check whether the selected measurement is available.
+              const variable = variableSelect.value;
+
+              const selectedRecord = dailyData.find(
+                row => row.date === date
+              );
+
+              const available =
+                selectedRecord &&
+                selectedRecord[variable] !== null &&
+                selectedRecord[variable] !== undefined;
+
+              if (available) {
+                chartStatus.textContent =
+                  `${date}: ${variableLabels[variable]} = ` +
+                  `${selectedRecord[variable]}. ` +
+                  "This is a participant-balanced daily summary " +
+                  "from at least three contributing participants.";
+              } else {
+                chartStatus.textContent =
+                  `${date}: No releasable daily summary for ` +
+                  `${variableLabels[variable]}. ` +
+                  "This may reflect limited participation, " +
+                  "missing measurements, or no monitoring.";
+              }
+
+              // Scroll to the graph.
+              document.getElementById("dashboard")
+                .scrollIntoView({
+                  behavior: "smooth",
+                  block: "start"
+                });
+            });
+
+            calendarGrid.appendChild(cell);
+          }
+        });
+      })
+      .catch(error => {
+        console.error(error);
+        document.getElementById("calendarGrid").textContent =
+          "Monitoring calendar unavailable.";
+      });
+  </script>
+</body>
+</html>
