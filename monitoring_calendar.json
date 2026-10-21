@@ -162,5 +162,37 @@
   {
     "date": "2026-10-07",
     "coverage": "limited"
+  },
+  {
+    "date": "2026-10-09",
+    "coverage": "limited"
+  },
+  {
+    "date": "2026-10-10",
+    "coverage": "limited"
+  },
+  {
+    "date": "2026-10-11",
+    "coverage": "limited"
+  },
+  {
+    "date": "2026-10-12",
+    "coverage": "limited"
+  },
+  {
+    "date": "2026-10-13",
+    "coverage": "limited"
+  },
+  {
+    "date": "2026-10-14",
+    "coverage": "limited"
+  },
+  {
+    "date": "2026-10-15",
+    "coverage": "limited"
+  },
+  {
+    "date": "2026-10-16",
+    "coverage": "multi"
   }
 ]
