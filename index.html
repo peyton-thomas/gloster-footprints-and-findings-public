@@ -80,36 +80,36 @@
   </p>
 
   <div style="
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px;
-    margin: 24px 0;
-  ">
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+">
 
-    <div style="background:white; padding:20px; border-radius:10px;">
-      <div style="font-size:2rem; font-weight:bold;">5</div>
-      <div>Monitoring participants</div>
-    </div>
-
-    <div style="background:white; padding:20px; border-radius:10px;">
-      <div style="font-size:2rem; font-weight:bold;">41</div>
-      <div>Monitoring dates</div>
-    </div>
-
-    <div style="background:white; padding:20px; border-radius:10px;">
-      <div style="font-size:2rem; font-weight:bold;">39,995</div>
-      <div>Recorded observations</div>
-    </div>
-
-    <div style="background:white; padding:20px; border-radius:10px;">
-      <div style="font-size:2rem; font-weight:bold;">11</div>
-      <div>Measurements displayed</div>
-    </div>
-
+  <div style="background:white; padding:20px; border-radius:10px; text-align:center;">
+    <div id="participantCount" style="font-size:2rem; font-weight:bold;">5</div>
+    <div>Monitoring participants</div>
   </div>
 
+  <div style="background:white; padding:20px; border-radius:10px; text-align:center;">
+    <div id="monitoringDaysCount" style="font-size:2rem; font-weight:bold;">49</div>
+    <div>Monitoring dates</div>
+  </div>
+
+  <div style="background:white; padding:20px; border-radius:10px; text-align:center;">
+    <div id="observationCount" style="font-size:2rem; font-weight:bold;">52,352</div>
+    <div>Recorded observations</div>
+  </div>
+
+  <div style="background:white; padding:20px; border-radius:10px; text-align:center;">
+    <div id="measurementCount" style="font-size:2rem; font-weight:bold;">11</div>
+    <div>Measurements displayed</div>
+  </div>
+
+</div>
+
   <p style="font-size:0.9rem; color:#555;">
-    Monitoring dates span August 26–October 7, 2026.
+    Monitoring dates span August 26–October 16, 2026.
     Data collection varies across participants, dates,
     locations, and measurements. Most observations come
     from a small number of monitored locations.
@@ -833,7 +833,40 @@ Promise.all([
         "not yet available. The graph currently shows pooled " +
         "measurements from monitored locations.";
     }
-    
+
+    // Update Monitoring Coverage statistics
+fetch("coverage_summary.json")
+  .then(response => {
+    if (!response.ok) {
+      throw new Error("Unable to load coverage summary");
+    }
+    return response.json();
+  })
+  .then(summary => {
+    document.getElementById("participantCount").textContent =
+      summary.participants.toLocaleString();
+
+    document.getElementById("monitoringDaysCount").textContent =
+      summary.monitoring_dates.toLocaleString();
+
+    document.getElementById("observationCount").textContent =
+      summary.observations.toLocaleString();
+
+    document.getElementById("measurementCount").textContent =
+      summary.measurements_displayed;
+
+    const formatDate = dateString =>
+      new Date(dateString + "T12:00:00").toLocaleDateString(
+        "en-US",
+        { month: "long", day: "numeric", year: "numeric" }
+      );
+
+    document.getElementById("coverageDateRange").textContent =
+      `${formatDate(summary.start_date)} – ${formatDate(summary.end_date)}`;
+  })
+  .catch(error => {
+    console.error("Coverage summary error:", error);
+  });
     
     // Monitoring calendar: separate months with aligned weekdays
     fetch("monitoring_calendar.json")
@@ -848,6 +881,9 @@ Promise.all([
           document.getElementById("calendarGrid");
 
         calendarGrid.innerHTML = "";
+
+         // Update the monitoring coverage summary automatically
+document.getElementById("monitoringDaysCount").textContent = records.length;
 
         const coverageByDate = Object.fromEntries(
           records.map(row => [row.date, row.coverage])
